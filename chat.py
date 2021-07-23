@@ -20,7 +20,7 @@ if __name__ == "__main__":
     try:
         print("聊天开始！")
         while True:
-            text = str(input())
+            text = str(input("我："))
             ids = [s.Encode(text) + [eos_id]]
             res = model.infer(ids)[0][0][0].tolist()
             for i in range(len(res)):
@@ -28,6 +28,6 @@ if __name__ == "__main__":
                     res = res[:i]
                     break
             res = s.Decode(res)
-            print(res)
+            print("杨超越：" + res)
     except Exception as e:
         print("聊天结束！")
