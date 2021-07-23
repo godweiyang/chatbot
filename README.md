@@ -78,7 +78,7 @@ python3 export/export.py \
 ## 开始交互式聊天！
 
 ```shell
-python3 predict.py \
+python3 chat.py \
     --spm_model ./data/spm.model \
     --model_file ./models/transformer_big/model.pb
 ```
