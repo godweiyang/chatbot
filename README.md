@@ -1,3 +1,5 @@
+![](https://files.mdnice.com/user/4623/c269aeb5-71c4-4f40-ba39-9bd98782ef2a.png)
+
 ## 安装环境
 需要安装SentencePiece的命令行版本和python版本，还需要安装NeurST来训练模型，安装LightSeq来加速模型推理。
 
