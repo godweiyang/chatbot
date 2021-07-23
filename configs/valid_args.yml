@@ -17,4 +17,3 @@ validator.params:
   eval_metric: tok_bleu
   eval_top_checkpoints_to_keep: 10
   eval_auto_average_checkpoints: true
-  

@@ -1,0 +1,4 @@
+models/
+data/tfrecords/
+data/spm.*
+__pycache__
