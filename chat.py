@@ -22,12 +22,12 @@ if __name__ == "__main__":
         while True:
             text = str(input())
             ids = [s.Encode(text) + [eos_id]]
-            res = list(model.infer(ids)[0][0][0][:-1])
+            res = model.infer(ids)[0][0][0].tolist()
             for i in range(len(res)):
                 if res[i] == eos_id:
                     res = res[:i]
-            print(res)
+                    break
             res = s.Decode(res)
             print(res)
-    except:
+    except Exception as e:
         print("聊天结束！")
