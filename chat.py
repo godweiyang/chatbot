@@ -23,10 +23,7 @@ if __name__ == "__main__":
             text = str(input("我："))
             ids = [s.Encode(text) + [eos_id]]
             res = model.infer(ids)[0][0][0].tolist()
-            for i in range(len(res)):
-                if res[i] == eos_id:
-                    res = res[:i]
-                    break
+            res = res.remove(eos_id)
             res = s.Decode(res)
             print("杨超越：" + res)
     except Exception as e:
