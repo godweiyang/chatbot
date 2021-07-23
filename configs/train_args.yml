@@ -1,0 +1,13 @@
+dataset.class: ParallelTFRecordDataset
+dataset.params:
+  data_path: ./data/tfrecords
+  shuffle_dataset: True
+batch_by_tokens: true
+batch_size_per_gpu: 8192
+max_src_len: 256
+max_trg_len: 256
+train_steps: 300000
+summary_steps: 200
+save_checkpoint_steps: 1000
+criterion: label_smoothed_cross_entropy
+label_smoothing: 0.1

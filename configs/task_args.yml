@@ -1,0 +1,14 @@
+task.class: seq2seq
+task.params:
+  src_data_pipeline.class: TextDataPipeline
+  src_data_pipeline.params:
+    language: zh
+    subtokenizer: spm
+    subtokenizer_codes: ./data/spm.model
+    vocab_path: ./data/spm.vocab
+  trg_data_pipeline.class: TextDataPipeline
+  trg_data_pipeline.params:
+    language: zh
+    subtokenizer: spm
+    subtokenizer_codes: ./data/spm.model
+    vocab_path: ./data/spm.vocab
