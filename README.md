@@ -140,6 +140,7 @@ python3 export/export.py \
     --output_file ./models/model.pb \
     --generation_method topk \
     --topk 4 \
+    --length_penalty 0.6 \
     --beam_size 4
 ```
 
