@@ -8,10 +8,9 @@ validator.params:
   eval_start_at: 0
   eval_steps: 1000
   eval_criterion: label_smoothed_cross_entropy
-  eval_search_method: beam_search
+  eval_search_method: sampling
   eval_search_method.params:
-    beam_size: 4
-    length_penalty: 0.6
+    top_k: 4
     extra_decode_length: 50
     maximum_decode_length: 120
   eval_metric: tok_bleu

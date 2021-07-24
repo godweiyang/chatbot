@@ -55,6 +55,17 @@ sudo ldconfig -v
 pip3 install lightseq neurst sentencepiece
 ```
 
+## 快速体验
+我提供了训练好的词表和模型文件，分别是`data/spm.model`和`models/model.pb`。由于大小限制，我这里只提供了训练好的小模型，词表大小也只有10k。如果你想要更好的回复效果，请参照后续教程自己训练一个Transformer-big模型，同时词表扩大到32k。
+
+只需要直接运行下面命令就能开始聊天：
+
+```shell
+python3 chat.py \
+    --spm_model ./data/spm.model \
+    --model_file ./models/model.pb
+```
+
 ## 开始养成
 ### 生成词表
 首先我们需要从训练语料库中抽取出词表，为了方便，直接用SentencePiece来分词，生成大小为32k的词表。
@@ -68,9 +79,6 @@ spm_train --input=./data/train/train.src,./data/train/train.trg \
 
 这里需要指定训练语料路径`--input`、词表保存的路径前缀`--model_prefix`和词表大小`--vocab_size`。运行结束后会在`data`目录下生成`spm.model`和`spm.vocab`两个词表文件。一个是训练好的分词模型，一个是词表。
 
-不过我也上传了生成好的TFRecord，大家也可以直接使用，跳过这一步。
-
-**我上传了生成好的词表文件，大家可以直接使用，跳过这一步。**
 
 ### 生成TFRecord
 为了加快TensorFlow的训练速度，可以预先将训练语料用上面的词表处理成id，然后保存为TFRecord格式。这样模型训练时就可以直接读取id进行训练了，不需要做前面的分词操作。能大大加快训练速度，提升显卡利用率。
@@ -91,35 +99,30 @@ python3 -m neurst.cli.create_tfrecords \
 
 这里主要需要指定训练集的路径`--src_file`和`--trg_file`，其它参数保持默认即可。生成完毕后会在`data/tfrecords`下面生成32个二进制文件，这就是处理好的训练数据了。
 
-**我上传了生成好的TFRecord，大家可以直接使用，跳过这一步。**
-
 ### 模型训练
-有了词表，有了处理好的训练数据，接下来就是训练模型了。这里开启了XLA优化，使用Horovod分布式训练，加快训练速度。如果报错，可以去掉最后两行。
+有了词表，有了处理好的训练数据，接下来就是训练模型了。这里开启了XLA优化，加快训练速度。
 
 ```shell
 python3 -m neurst.cli.run_exp \
     --entry trainer \
     --task translation \
     --hparams_set transformer_big \
-    --model_dir ./models/transformer_big \
+    --model_dir ./models \
     --config_paths ./configs/task_args.yml,./configs/train_args.yml,./configs/valid_args.yml \
-    --distribution_strategy horovod \
     --enable_xla
 ```
 
-这里需要指定的参数就是模型保存路径`model_dir`，其他都保持默认。训练好的模型会保存在`models/transformer_big`下，里面还细分为了`best`、`best_avg`等文件夹，用来存最好的模型、模型的平均值等等。
+这里需要指定的参数就是模型保存路径`model_dir`，其他都保持默认。训练好的模型会保存在`models`下，里面还细分为了`best`、`best_avg`等文件夹，用来存最好的模型、模型的平均值等等。
 
 我在8张V100 32G显卡上训练了8个小时左右，如果你们自己训练的话还是比较耗时的。
 
-**由于模型文件过大，之后我会找地方上传我训练好的模型文件，省去大家训练的时间。**
-
 ### 模型预测
-训练好的模型会保存在`models/transformer_big`目录下，然后我们就可以开始预测啦。
+训练好的模型会保存在`models`目录下，然后我们就可以开始预测啦。
 
 ```shell
 python3 -m neurst.cli.run_exp \
     --entry predict \
-    --model_dir ./models/transformer_big \
+    --model_dir ./models \
     --config_paths ./configs/predict_args.yml \
     --output output.txt
 ```
@@ -133,15 +136,14 @@ python3 -m neurst.cli.run_exp \
 
 ```shell
 python3 export/export.py \
-    --model_dir ./models/transformer_big \
-    --output_file ./models/transformer_big/model.pb \
-    --beam_size 4 \
-    --length_penalty 0.6
+    --model_dir ./models \
+    --output_file ./models/model.pb \
+    --generation_method topk \
+    --topk 4 \
+    --beam_size 4
 ```
 
-这里需要指定模型路径`--model_dir`和导出PB文件的路径`--output_file`，其它参数保持默认。最后会得到`models/transformer_big/model.pb`这个PB文件。
-
-**由于模型文件过大，之后我会找地方上传我导出好的PB模型文件，这样大家就可以直接跳到最后一步了。**
+这里需要指定模型路径`--model_dir`和导出PB文件的路径`--output_file`，其它参数保持默认。最后会得到`models/model.pb`这个PB文件。
 
 ### 开始交互式聊天！
 有了PB模型文件，就可以和超越妹妹开始聊天啦！
@@ -149,7 +151,7 @@ python3 export/export.py \
 ```shell
 python3 chat.py \
     --spm_model ./data/spm.model \
-    --model_file ./models/transformer_big/model.pb
+    --model_file ./models/model.pb
 ```
 
 这里需要指定两个路径。一是最开始训练好的分词模型`--spm_model`，用来将你输入的句子变成整数id。二是`--model_file`，也就是上一步中的PB格式模型文件。

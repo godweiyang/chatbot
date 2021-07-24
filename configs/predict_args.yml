@@ -3,10 +3,9 @@ dataset.params:
   src_file: ./data/test/test.src
   trg_file: ./data/test/test.trg
 batch_size: 64
-search_method: beam_search
+search_method: sampling
 search_method.params:
-  beam_size: 4
-  length_penalty: 0.6
+  top_k: 4
   extra_decode_length: 50
   maximum_decode_length: 120
 metric: tok_bleu
