@@ -1,2 +1,7 @@
-data/tfrecords/
 __pycache__
+data/tfrecords/
+models/best*
+models/train
+models/checkpoint
+models/ckpt*
+models/model_configs.yml
