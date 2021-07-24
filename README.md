@@ -55,7 +55,7 @@ sudo ldconfig -v
 pip3 install lightseq neurst sentencepiece
 ```
 
-## 快速体验
+## 快速体验:yum:
 我提供了训练好的词表和模型文件，分别是`demo/spm.model`和`demo/model.pb`。由于大小限制，我这里只提供了训练好的小模型，词表大小也只有10k。如果你想要更好的回复效果，请参照后续教程自己训练一个Transformer-big模型，同时词表扩大到32k。
 
 只需要直接运行下面命令就能开始聊天：
