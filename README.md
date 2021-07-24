@@ -45,11 +45,9 @@
 安装命令都很简单：
 
 ```shell
-git clone https://github.com/google/sentencepiece.git & cd sentencepiece
-mkdir build & cd build
-cmake ..
-make -j $(nproc)
-sudo make install
+git clone https://github.com/google/sentencepiece.git && cd sentencepiece
+mkdir build && cd build
+cmake .. && make -j $(nproc) && sudo make install
 sudo ldconfig -v
 
 pip3 install lightseq neurst sentencepiece
