@@ -1,4 +1,13 @@
-## 演示效果
+在下面教程中，我演示了如何从零开始训练一个比较智障的聊天机器人。
+
+[https://zhuanlan.zhihu.com/p/392175369](https://zhuanlan.zhihu.com/p/392175369)
+
+但是当时数据量太少，模型简单，完全没法用，只能回复训练集中出现过的句子。
+
+而现在，完全体的聊天机器人终于诞生了，我把它命名为“杨超越”。这次可以随你提问什么了，她都能对答如流！
+
+首先来看看回复的效果怎么样：
+
 ```text
 聊天开始！（按q退出）
 我：很高兴认识你
@@ -17,8 +26,22 @@
 聊天结束！
 ```
 
+可以看到超越妹妹的回复还是非常流畅的，那她究竟是怎么诞生的呢？
+
+## 介绍
+这里我才用的是网上公开的小黄鸡聊天语料，大概有100万条左右，但是质量不是很高，都放在了`data`目录下。
+
+模型采用标准的Transformer-big模型，输入你的提问句子，预测超越妹妹回复的句子，`config`目录下是训练和预测的配置文件。
+
+模型训练采用NeurST训练库，主要基于TensorFlow，也支持PyTorch训练。模型快速推理采用LightSeq，可加速推理10倍以上，同时还能加速NeurST的训练，最高加速3倍。两者都是字节跳动AI Lab自研的，都已开源。
+
 ## 安装环境
-需要安装SentencePiece的命令行版本和python版本，还需要安装NeurST来训练模型，安装LightSeq来加速模型推理。
+我们需要安装三样东西：
+* SentencePiece的命令行版本和python版本，用来对句子进行分词。
+* NeurST深度学习训练库，用来训练Transformer模型。
+* LightSeq，用来加速模型推理。
+
+安装命令都很简单：
 
 ```shell
 git clone https://github.com/google/sentencepiece.git & cd sentencepiece
@@ -31,8 +54,9 @@ sudo ldconfig -v
 pip3 install lightseq neurst sentencepiece
 ```
 
-## 生成词表
-这里使用的是SentencePiece来生成大小为32k的词表。
+## 开始养成
+### 生成词表
+首先我们需要从训练语料库中抽取出词表，为了方便，直接用SentencePiece来分词，生成大小为32k的词表。
 
 ```shell
 spm_train --input=./data/train/train.src,./data/train/train.trg \
@@ -41,8 +65,14 @@ spm_train --input=./data/train/train.src,./data/train/train.trg \
     --character_coverage=0.9995
 ```
 
-## 生成TFRecord
-这是为了加快训练时数据处理的速度。
+这里需要指定训练语料路径`--input`、词表保存的路径前缀`--model_prefix`和词表大小`--vocab_size`。运行结束后会在`data`目录下生成`spm.model`和`spm.vocab`两个词表文件。一个是训练好的分词模型，一个是词表。
+
+不过我也上传了生成好的TFRecord，大家也可以直接使用，跳过这一步。
+
+**我上传了生成好的词表文件，大家可以直接使用，跳过这一步。**
+
+### 生成TFRecord
+为了加快TensorFlow的训练速度，可以预先将训练语料用上面的词表处理成id，然后保存为TFRecord格式。这样模型训练时就可以直接读取id进行训练了，不需要做前面的分词操作。能大大加快训练速度，提升显卡利用率。
 
 ```shell
 python3 -m neurst.cli.create_tfrecords \
@@ -58,8 +88,12 @@ python3 -m neurst.cli.create_tfrecords \
     --output_template ./data/tfrecords/train.tfrecords-%5.5d-of-%5.5d
 ```
 
-## 模型训练
-这里开启了XLA优化，使用Horovod分布式训练。如果报错，去掉这两行。
+这里主要需要指定训练集的路径`--src_file`和`--trg_file`，其它参数保持默认即可。生成完毕后会在`data/tfrecords`下面生成32个二进制文件，这就是处理好的训练数据了。
+
+**我上传了生成好的TFRecord，大家可以直接使用，跳过这一步。**
+
+### 模型训练
+有了词表，有了处理好的训练数据，接下来就是训练模型了。这里开启了XLA优化，使用Horovod分布式训练，加快训练速度。如果报错，可以去掉最后两行。
 
 ```shell
 python3 -m neurst.cli.run_exp \
@@ -72,8 +106,14 @@ python3 -m neurst.cli.run_exp \
     --enable_xla
 ```
 
-## 模型预测
-这里需要指定测试集，而不是用户交互输入。这一步可以跳过，直接进行下面步骤。
+这里需要指定的参数就是模型保存路径`model_dir`，其他都保持默认。训练好的模型会保存在`models/transformer_big`下，里面还细分为了`best`、`best_avg`等文件夹，用来存最好的模型、模型的平均值等等。
+
+我在8张V100 32G显卡上训练了8个小时左右，如果你们自己训练的话还是比较耗时的。
+
+**由于模型文件过大，之后我会找地方上传我训练好的模型文件，省去大家训练的时间。**
+
+### 模型预测
+训练好的模型会保存在`models/transformer_big`目录下，然后我们就可以开始预测啦。
 
 ```shell
 python3 -m neurst.cli.run_exp \
@@ -83,8 +123,12 @@ python3 -m neurst.cli.run_exp \
     --output output.txt
 ```
 
-## 模型导出为PB格式
-这是为了后续导入到LightSeq中进行推理加速。
+但是这时候还没有交互功能，只能指定一个测试集文件，写在了模型预测的配置文件里`configs/predict_args.yml`。还可以指定`--output`，将回复结果输出到文件中。
+
+**如果想直接体验交互式的对话聊天，可以跳过这一步。**
+
+### 模型导出为PB格式
+如果直接用TensorFlow进行推理的话，速度非常慢，你就会感觉你和超越妹妹之间存在延时。所以可以将训练得到的ckpt模型导出为PB格式，然后就可以用LightSeq训练加速引擎进行快速推理了。
 
 ```shell
 python3 export/export.py \
@@ -94,10 +138,28 @@ python3 export/export.py \
     --length_penalty 0.6
 ```
 
-## 开始交互式聊天！
+这里需要指定模型路径`--model_dir`和导出PB文件的路径`--output_file`，其它参数保持默认。最后会得到`models/transformer_big/model.pb`这个PB文件。
+
+**由于模型文件过大，之后我会找地方上传我导出好的PB模型文件，这样大家就可以直接跳到最后一步了。**
+
+### 开始交互式聊天！
+有了PB模型文件，就可以和超越妹妹开始聊天啦！
 
 ```shell
 python3 chat.py \
     --spm_model ./data/spm.model \
     --model_file ./models/transformer_big/model.pb
 ```
+
+这里需要指定两个路径。一是最开始训练好的分词模型`--spm_model`，用来将你输入的句子变成整数id。二是`--model_file`，也就是上一步中的PB格式模型文件。
+
+聊天过程中随时可以按q退出聊天，你每说一句话，超越妹妹就会回复你一句。
+
+## 欢迎关注
+这次用到的NeurST训练库和LightSeq加速库都非常好用，从上面使用教程中也可以看出，几乎不需要你写什么代码就能使用起来。
+
+**NeurST训练库：**
+[https://github.com/bytedance/neurst](https://github.com/bytedance/neurst)
+
+**LightSeq加速库：**
+[https://github.com/bytedance/lightseq](https://github.com/bytedance/lightseq)
