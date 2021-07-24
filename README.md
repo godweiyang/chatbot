@@ -102,7 +102,7 @@ python3 -m neurst.cli.run_exp \
     --task translation \
     --hparams_set transformer_big \
     --model_dir ./models/transformer_big \
-    --config_paths ./configs/task_args.yml,./configs/train_args.yml,./configs/valid_args.yml
+    --config_paths ./configs/task_args.yml,./configs/train_args.yml,./configs/valid_args.yml \
     --distribution_strategy horovod \
     --enable_xla
 ```
